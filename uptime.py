@@ -1,18 +1,10 @@
 #!/usr/bin/env python
 import sqlite3
 import urllib
+import website
 import yaml
 
 config = yaml.safe_load(open("config.yml"))
-
-class WebSite:
-	def __init__(self, url, notifyemail, laststatus="UNCHECKED", id=0, created_at=0, updated_at=0):
-		self.url = url
-		self.notifyemail = notifyemail
-		self.id=id
-		self.laststatus = laststatus
-		self.created_at = created_at
-		self.updated_at = updated_at
 
 def init_db(conn):
 	conn.execute('''CREATE TABLE IF NOT EXISTS websites (
@@ -43,7 +35,7 @@ def init_db(conn):
 def get_websites(conn):
 	ret = []
 	for row in conn.execute('''SELECT * FROM websites'''):
-		ret.append(WebSite(row[1],row[2],row[4],row[0],row[3],row[5]))
+		ret.append(website.WebSite(row[1],row[2],row[4],row[0],row[3],row[5]))
 	return ret
 
 def put_website(conn, website):
