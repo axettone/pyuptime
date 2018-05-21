@@ -50,6 +50,8 @@ def put_website(conn, website):
 	conn.execute('''INSERT INTO websites (url,notifyemail) VALUES (?,?)''', (website.url, website.notifyemail))
 	conn.commit()
 def report_incident(website,status):
+	global config
+	print "Sending an email to %s from %s"%(website.notifyemail, config["notifications"]["n_email_from"])
 
 def update_website(conn, website, newstatus):
 	cursor = conn.execute('''SELECT laststatus FROM websites WHERE id=?''', (website.id,))
@@ -58,8 +60,10 @@ def update_website(conn, website, newstatus):
 
 	if (last_status == "OK" and newstatus != "OK"):
 		print "New incident"
+		report_incident(website, newstatus)
 	elif (last_status != "OK" and newstatus == "OK"):
 		print "Incident closed"
+		report_incident(website, newstatus)
 	else:
 		print "Nothing special"
 
@@ -71,15 +75,18 @@ def update_website(conn, website, newstatus):
 		INSERT INTO checks (website_id,status) VALUES (?,?)''', (website.id, newstatus))
 	conn.commit()
 def check_website(conn, website):
-	code = urllib.urlopen(website.url).getcode()
-	if code == 200:
-		update_website(conn, website, "OK")
-	else:
+	try:
+		code = urllib.urlopen(website.url).getcode()
+		if code == 200:
+			update_website(conn, website, "OK")
+		else:
+			update_website(conn, website, "ERROR")
+	except:
 		update_website(conn, website, "ERROR")
 
 conn = sqlite3.connect('websites.db')
 init_db(conn)
-
+#put_website(conn, WebSite("http://www.itestense","web@itestense.it"))
 sites = get_websites(conn)
 for item in sites:
 	check_website(conn, item)

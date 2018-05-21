@@ -1,5 +1,4 @@
 notifications:
-  n_email_to: ""
   n_email_from: ""
   n_email_smtp: ""
   n_email_port: 25
