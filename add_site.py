@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import database
 import sqlite3
 import sys
 import website
@@ -10,5 +11,7 @@ def put_website(conn, website):
 if (len(sys.argv)<3):
 	print "Usage %s %s %s"%(sys.argv[0], "http://www.myexample.com", "alarm@mywebagency.com")
 	exit(-1)
+
 conn = sqlite3.connect('websites.db')
+database.init_db(conn)
 put_website(conn,website.WebSite(sys.argv[1],sys.argv[2]))
