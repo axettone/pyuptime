@@ -1,5 +1,9 @@
 # pyuptime
-Uptime checker for paranoid webmasters
+Uptime checker for paranoid webmasters. This programs just check for
+HTTP status code and/or exceptions to determine if the website is up
+or down. This tool should be paired with another application that
+uses the data to display a dashboard.
+All the probes are inserted into "checks" table.
 
 ## TODO
 Implement email notifications.
