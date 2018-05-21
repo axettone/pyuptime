@@ -79,7 +79,7 @@ def check_website(conn, website):
 
 conn = sqlite3.connect('websites.db')
 init_db(conn)
-# put_website(conn, WebSite("http://www.estense.com", "web@itestense.it"))
+
 sites = get_websites(conn)
 for item in sites:
 	check_website(conn, item)
