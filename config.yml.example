@@ -1,5 +1,7 @@
 notifications:
   n_email_from: ""
   n_email_smtp: ""
-  n_email_port: 25
-  n_email_tls: no
+  n_email_user: ""
+  n_email_pass: ""
+  n_email_port: 587
+  n_email_tls: "yes"

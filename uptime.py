@@ -1,11 +1,25 @@
 #!/usr/bin/env python
 import database
+import smtplib
 import sqlite3
 import urllib
 import website
 import yaml
 
 config = yaml.safe_load(open("config.yml"))
+def send_email(to, message):
+	global config
+	print "Trying to send email"
+	server = smtplib.SMTP("%s:%s"%(config["notifications"]["n_email_smtp"],config["notifications"]["n_email_port"]))
+	server.ehlo()
+	if(config["notifications"]["n_email_tls"] == "yes"):
+		server.starttls()
+		server.ehlo()
+	print "Connected to mail server %s"%(config["notifications"]["n_email_smtp"])
+	server.login(config["notifications"]["n_email_user"],config["notifications"]["n_email_pass"])
+	print "Login successful"
+	ret = server.sendmail(config["notifications"]["n_email_from"], to, message)
+	server.quit()
 
 def get_websites(conn):
 	ret = []
@@ -16,9 +30,12 @@ def get_websites(conn):
 def put_website(conn, website):
 	conn.execute('''INSERT INTO websites (url,notifyemail) VALUES (?,?)''', (website.url, website.notifyemail))
 	conn.commit()
-def report_incident(website,status):
+
+def report_incident(website,oldstatus,status):
 	global config
 	print "Sending an email to %s from %s"%(website.notifyemail, config["notifications"]["n_email_from"])
+	message = "Website %s passed from %s to %s"%(website.url,oldstatus,status)
+	send_email(website.notifyemail, message)
 
 def update_website(conn, website, newstatus):
 	cursor = conn.execute('''SELECT laststatus FROM websites WHERE id=?''', (website.id,))
@@ -27,10 +44,10 @@ def update_website(conn, website, newstatus):
 
 	if (last_status == "OK" and newstatus != "OK"):
 		print "New incident"
-		report_incident(website, newstatus)
+		report_incident(website, last_status, newstatus)
 	elif (last_status != "OK" and newstatus == "OK"):
 		print "Incident closed"
-		report_incident(website, newstatus)
+		report_incident(website, last_status, newstatus)
 	else:
 		print "Nothing special"
 
@@ -41,6 +58,7 @@ def update_website(conn, website, newstatus):
 	conn.execute('''
 		INSERT INTO checks (website_id,status) VALUES (?,?)''', (website.id, newstatus))
 	conn.commit()
+	
 def check_website(conn, website):
 	try:
 		code = urllib.urlopen(website.url).getcode()
