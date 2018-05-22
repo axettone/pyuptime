@@ -2,13 +2,21 @@
 import database
 import smtplib
 import sqlite3
+import time
 import urllib
 import website
 import yaml
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
 
 config = yaml.safe_load(open("config.yml"))
 def send_email(to, message):
 	global config
+	msg = MIMEMultipart()
+	msg['From'] = config["notifications"]["n_email_from"]
+	msg['To'] = to
+	msg['Subject'] = "pyuptime notification"
+	msg.attach(MIMEText(message, 'plain'))
 	print "Trying to send email"
 	server = smtplib.SMTP("%s:%s"%(config["notifications"]["n_email_smtp"],config["notifications"]["n_email_port"]))
 	server.ehlo()
@@ -18,7 +26,7 @@ def send_email(to, message):
 	print "Connected to mail server %s"%(config["notifications"]["n_email_smtp"])
 	server.login(config["notifications"]["n_email_user"],config["notifications"]["n_email_pass"])
 	print "Login successful"
-	ret = server.sendmail(config["notifications"]["n_email_from"], to, message)
+	ret = server.sendmail(config["notifications"]["n_email_from"], to, msg.as_string())
 	server.quit()
 
 def get_websites(conn):
@@ -37,7 +45,7 @@ def report_incident(website,oldstatus,status):
 	message = "Website %s passed from %s to %s"%(website.url,oldstatus,status)
 	send_email(website.notifyemail, message)
 
-def update_website(conn, website, newstatus):
+def update_website(conn, website, newstatus, wait_ms):
 	cursor = conn.execute('''SELECT laststatus FROM websites WHERE id=?''', (website.id,))
 	last_status = cursor.fetchone()
 	last_status=last_status[0]
@@ -56,16 +64,20 @@ def update_website(conn, website, newstatus):
 		SET laststatus = ?, lastcheck=current_timestamp
 		WHERE id=?''', (newstatus, website.id))
 	conn.execute('''
-		INSERT INTO checks (website_id,status) VALUES (?,?)''', (website.id, newstatus))
+		INSERT INTO checks (website_id,status,wait_ms) VALUES (?,?,?)''', (website.id, newstatus,wait_ms))
 	conn.commit()
 	
 def check_website(conn, website):
 	try:
+		start = time.time()
 		code = urllib.urlopen(website.url).getcode()
+		end = time.time()
+		print (end-start)
+		wait_ms = 1000*(end-start)
 		if code == 200:
-			update_website(conn, website, "OK")
+			update_website(conn, website, "OK", wait_ms)
 		else:
-			update_website(conn, website, "ERROR")
+			update_website(conn, website, "ERROR", wait_ms)
 	except:
 		update_website(conn, website, "ERROR")
 

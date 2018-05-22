@@ -20,6 +20,7 @@ def init_db(conn):
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		website_id INTEGER,
 		status text,
+		wait_ms REAL,
 		created_at timestamp DEFAULT current_timestamp
 		)''')
 	conn.commit()

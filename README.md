@@ -5,9 +5,6 @@ or down. This tool should be paired with another application that
 uses the data to display a dashboard.
 All the probes are inserted into "checks" table.
 
-## TODO
-Implement email notifications.
-
 ## Setup
 Copy config.yml.example to config.yml and setup your SMTP parameters.
 You can add some sites using add_site.py script, doing something like
