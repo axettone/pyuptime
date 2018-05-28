@@ -42,9 +42,10 @@ def put_website(conn, website):
 
 def report_incident(website,oldstatus,status):
 	global config
-	print "Sending an email to %s from %s"%(website.notifyemail, config["notifications"]["n_email_from"])
-	message = "Website %s passed from %s to %s"%(website.url,oldstatus,status)
-	#send_email(website.notifyemail, message)
+	if (config["notifications"]["n_email_active"] == "yes"):
+		print "Sending an email to %s from %s"%(website.notifyemail, config["notifications"]["n_email_from"])
+		message = "Website %s passed from %s to %s"%(website.url,oldstatus,status)
+		send_email(website.notifyemail, message)
 
 def update_website(conn, website, newstatus, wait_ms):
 	cursor = conn.execute('''SELECT laststatus FROM websites WHERE id=?''', (website.id,))

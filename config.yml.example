@@ -1,4 +1,5 @@
 notifications:
+  n_email_active: "yes"
   n_email_from: ""
   n_email_smtp: ""
   n_email_user: ""
