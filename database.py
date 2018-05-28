@@ -3,16 +3,6 @@ from os import walk
 class Database:
 	def __init__(self, conn):
 		self.conn = conn
-	def migrate(self):
-		f = []
-		for (_,_, filenames) in walk("migrations"):
-			for (fname) in filenames:
-				filename = fname[:-3]
-				print filename
-				exec("import %s"%filename)
-				mod = sys.modules[filename]
-				for k in mod.__dict__:
-					mod.__dict__[up]()
 def init_db(conn):
 	conn.execute('''CREATE TABLE IF NOT EXISTS websites (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 

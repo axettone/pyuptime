@@ -31,19 +31,20 @@ def send_email(to, message):
 
 def get_websites(conn):
 	ret = []
+	conn.row_factory = sqlite3.Row
 	for row in conn.execute('''SELECT * FROM websites'''):
-		ret.append(website.WebSite(row[1],row[2],row[4],row[0],row[3],row[5]))
+		ret.append(website.WebSite(row['url'],row['notifyemail'],row['title'],row['laststatus'],row['id'],row['created_at'],row['updated_at']))
 	return ret
 
 def put_website(conn, website):
-	conn.execute('''INSERT INTO websites (url,notifyemail) VALUES (?,?)''', (website.url, website.notifyemail))
+	conn.execute('''INSERT INTO websites (url,notifyemail,title) VALUES (?,?,?)''', (website.url, website.notifyemail,website.title))
 	conn.commit()
 
 def report_incident(website,oldstatus,status):
 	global config
 	print "Sending an email to %s from %s"%(website.notifyemail, config["notifications"]["n_email_from"])
 	message = "Website %s passed from %s to %s"%(website.url,oldstatus,status)
-	send_email(website.notifyemail, message)
+	#send_email(website.notifyemail, message)
 
 def update_website(conn, website, newstatus, wait_ms):
 	cursor = conn.execute('''SELECT laststatus FROM websites WHERE id=?''', (website.id,))
@@ -72,14 +73,13 @@ def check_website(conn, website):
 		start = time.time()
 		code = urllib.urlopen(website.url).getcode()
 		end = time.time()
-		print (end-start)
 		wait_ms = 1000*(end-start)
 		if code == 200:
 			update_website(conn, website, "OK", wait_ms)
 		else:
 			update_website(conn, website, "ERROR", wait_ms)
 	except:
-		update_website(conn, website, "ERROR")
+		update_website(conn, website, "ERROR", wait_ms)
 
 conn = sqlite3.connect('websites.db')
 database.init_db(conn)
